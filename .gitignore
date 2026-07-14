@@ -1,0 +1,7 @@
+# 工作记忆（含项目笔记，勿推到公开仓库）
+.workbuddy/
+
+# 系统/产物
+.DS_Store
+*.log
+node_modules/

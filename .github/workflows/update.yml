@@ -1,0 +1,39 @@
+name: 定时补抓更新
+
+# 触发：每日 02:00 UTC（= 北京 10:00）+ 手动触发
+# 流程：拉代码 → 跑爬虫生成/更新攻略页 → 提交 → 推送
+# 部署：GitHub Pages 监听 main 分支 push 自动重建上线（见 pages.yml）
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取仓库
+        uses: actions/checkout@v4
+
+      - name: 配置 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 运行自动补抓
+        run: node site/crawler/crawl.js
+
+      - name: 提交并更新（有变更才提交）
+        run: |
+          git config user.name "crawl-bot"
+          git config user.email "bot@zelda-guide.example.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "无变更，跳过提交"
+          else
+            git commit -m "chore: 自动补抓更新 $(date +%F)"
+            git push
+          fi

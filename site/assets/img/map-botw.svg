@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" font-family="sans-serif">
+  <rect width="800" height="450" fill="#F5EEDD"/>
+  <g stroke="#E3DCCB" stroke-width="1">
+    <line x1="0" y1="80" x2="800" y2="80"/>
+    <line x1="0" y1="170" x2="800" y2="170"/>
+    <line x1="0" y1="260" x2="800" y2="260"/>
+    <line x1="0" y1="350" x2="800" y2="350"/>
+  </g>
+  <!-- mountain ranges (Great Plateau stylized) -->
+  <g fill="#2E6B4F">
+    <path d="M0 300 L120 150 L210 300 Z"/>
+    <path d="M150 300 L280 120 L400 300 Z"/>
+    <path d="M520 300 L650 160 L800 300 Z"/>
+  </g>
+  <g fill="#24583F" opacity=".5">
+    <path d="M120 150 L150 190 L90 190 Z"/>
+    <path d="M280 120 L312 168 L248 168 Z"/>
+    <path d="M650 160 L680 200 L620 200 Z"/>
+  </g>
+  <!-- lake -->
+  <path d="M420 360 q120 -40 220 0 q-10 50 -120 56 q-110 -6 -100 -56z" fill="#9CC3D4"/>
+  <!-- routes -->
+  <g stroke="#B68A3E" stroke-width="2.5" stroke-dasharray="7 7" fill="none" opacity=".85">
+    <path d="M200 280 Q360 320 470 350"/>
+    <path d="M470 350 Q600 300 660 230"/>
+    <path d="M200 280 Q260 200 280 150"/>
+  </g>
+  <g fill="#B68A3E">
+    <circle cx="200" cy="280" r="7"/>
+    <circle cx="470" cy="350" r="7"/>
+    <circle cx="660" cy="230" r="7"/>
+    <circle cx="280" cy="150" r="7"/>
+  </g>
+  <g fill="#24583F" font-size="15" font-weight="700">
+    <text x="60" y="330">初始台地</text>
+    <text x="430" y="392">中央海拉鲁平原</text>
+    <text x="600" y="220">东部峡谷</text>
+    <text x="210" y="140">双子山</text>
+  </g>
+  <text x="24" y="424" fill="#4A555B" font-size="13">原创示意图 · 旷野之息海拉鲁大陆（非官方地图）</text>
+</svg>

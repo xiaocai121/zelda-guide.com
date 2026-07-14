@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" font-family="sans-serif">
+  <defs>
+    <linearGradient id="tsky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7FB4D8"/>
+      <stop offset="1" stop-color="#EAF1EC"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#tsky)"/>
+  <!-- sky islands -->
+  <g fill="#2E6B4F">
+    <path d="M70 120 q40 -30 90 -4 q-4 40 -46 50 q-50 -12 -44 -46z"/>
+    <path d="M430 90 q44 -32 96 -2 q-4 42 -50 52 q-54 -12 -46 -50z"/>
+  </g>
+  <circle cx="540" cy="80" r="30" fill="#F2D58A"/>
+  <!-- ground haze -->
+  <path d="M0 300 Q320 260 640 300 V360 H0 Z" fill="#3C8A63"/>
+  <text x="32" y="320" fill="#FAF8F3" font-size="30" font-weight="800">王国之泪 TOTK</text>
+  <text x="32" y="346" fill="#EAF1EC" font-size="14">天空 · 地表 · 地下 三层世界攻略</text>
+</svg>

@@ -1,0 +1,39 @@
+name: 部署到 GitHub Pages
+
+# 触发：push 到 main + 手动触发
+# 作用：把 site/ 目录整体发布为 GitHub Pages 静态站
+# 前置：仓库 Settings → Pages → Build and deployment → Source 选「GitHub Actions」
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取仓库
+        uses: actions/checkout@v4
+      - name: 打包 site/ 作为 Pages 产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署
+        id: deployment
+        uses: actions/deploy-pages@v4

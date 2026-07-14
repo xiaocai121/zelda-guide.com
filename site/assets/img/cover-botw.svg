@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" font-family="sans-serif">
+  <defs>
+    <linearGradient id="bsky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B68A3E"/>
+      <stop offset="1" stop-color="#F5EEDD"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#bsky)"/>
+  <!-- mountains -->
+  <g fill="#2E6B4F">
+    <path d="M0 300 L150 130 L300 300 Z"/>
+    <path d="M260 300 L420 110 L560 300 Z"/>
+  </g>
+  <path d="M330 300 q120 -40 220 0 q-10 50 -120 56 q-110 -6 -100 -56z" fill="#9CC3D4"/>
+  <text x="32" y="320" fill="#FAF8F3" font-size="30" font-weight="800">旷野之息 BOTW</text>
+  <text x="32" y="346" fill="#F5EEDD" font-size="14">海拉鲁大陆 · 全神庙 · 全回忆 · 全呀哈哈</text>
+</svg>

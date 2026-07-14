@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" font-family="sans-serif">
+  <rect width="800" height="450" fill="#EAF1EC"/>
+  <g stroke="#CFE0D4" stroke-width="1">
+    <line x1="0" y1="70" x2="800" y2="70"/>
+    <line x1="0" y1="150" x2="800" y2="150"/>
+    <line x1="0" y1="230" x2="800" y2="230"/>
+    <line x1="0" y1="310" x2="800" y2="310"/>
+    <line x1="0" y1="390" x2="800" y2="390"/>
+  </g>
+  <!-- floating sky islands (original stylized) -->
+  <g fill="#2E6B4F">
+    <path d="M110 120 q55 -40 120 -6 q-6 52 -60 64 q-66 -16 -60 -58z"/>
+    <path d="M420 90 q48 -34 104 -4 q-4 44 -52 56 q-58 -14 -52 -52z"/>
+    <path d="M600 200 q44 -32 96 -2 q-4 42 -48 52 q-54 -12 -48 -50z"/>
+    <path d="M250 280 q52 -36 112 -4 q-6 48 -56 60 q-60 -14 -56 -56z"/>
+    <path d="M520 330 q40 -28 88 -2 q-4 38 -44 48 q-50 -10 -44 -46z"/>
+  </g>
+  <g fill="#B68A3E">
+    <path d="M330 200 q34 -24 74 -2 q-4 30 -38 38 q-40 -8 -36 -36z"/>
+  </g>
+  <!-- dashed routes -->
+  <g stroke="#B68A3E" stroke-width="2.5" stroke-dasharray="7 7" fill="none" opacity=".85">
+    <path d="M170 138 Q300 110 472 110"/>
+    <path d="M472 110 Q560 160 648 210"/>
+    <path d="M306 220 Q280 260 306 282"/>
+    <path d="M356 222 Q460 300 548 334"/>
+  </g>
+  <!-- markers -->
+  <g fill="#B68A3E">
+    <circle cx="170" cy="138" r="7"/>
+    <circle cx="472" cy="110" r="7"/>
+    <circle cx="648" cy="210" r="7"/>
+    <circle cx="306" cy="282" r="7"/>
+    <circle cx="548" cy="334" r="7"/>
+    <circle cx="356" cy="222" r="7"/>
+  </g>
+  <g fill="#24583F" font-size="15" font-weight="700">
+    <text x="178" y="134">空岛群 A</text>
+    <text x="480" y="106">中央大空岛</text>
+    <text x="656" y="206">东部群岛</text>
+    <text x="314" y="278">地下水系</text>
+    <text x="556" y="330">南部遗迹</text>
+  </g>
+  <text x="24" y="424" fill="#4A555B" font-size="13">原创示意图 · 王国之泪天空/地下网络（非官方地图）</text>
+</svg>
