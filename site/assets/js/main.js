@@ -23,12 +23,12 @@
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('[data-lang-toggle]');
     if (!btn) return;
+    var href = btn.getAttribute('data-lang-href');
+    if (href) { window.location.href = href; return; }
     var lang = root.getAttribute('lang') === 'en' ? 'zh' : 'en';
     root.setAttribute('lang', lang);
     try { localStorage.setItem('lang', lang); } catch (e2) {}
-    toast(lang === 'en'
-      ? '已记住：偏好英文版（/en 将在 v1.1 上线，面向海外 AdSense）'
-      : '已切回：中文版（百度 SEO + 国内广告联盟）');
+    toast(lang === 'en' ? 'Switched to English version' : '已切回中文版');
   });
 
   /* ---------- 移动端菜单 ---------- */

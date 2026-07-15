@@ -57,7 +57,7 @@ async function fetchSource(src) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 12000);
     const res = await fetch(src.url, {
-      headers: { 'User-Agent': 'ZeldaGuideBot/1.0 (+https://zelda-guide.example.com; 合规补抓)' },
+      headers: { 'User-Agent': 'ZeldaGuideBot/1.0 (+https://zelda-guide.com; 合规补抓)' },
       signal: ctrl.signal,
     });
     clearTimeout(timer);
@@ -84,7 +84,7 @@ function renderHtml(m, bodyText) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${m.title} · ${gameName} | 塞尔达攻略站</title>
   <meta name="description" content="${m.title}（自动补抓，注明出处）" />
-  <link rel="canonical" href="https://zelda-guide.example.com/${m.game}/guides/${m.slug}.html" />
+  <link rel="canonical" href="https://zelda-guide.com/${m.game}/guides/${m.slug}.html" />
   <link rel="stylesheet" href="${ASSETS}/css/main.css" />
   <script>(function(){var t='light';try{t=localStorage.getItem('theme')||'light';}catch(e){}document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>

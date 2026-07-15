@@ -6,7 +6,7 @@ Disallow: /.github/
 Disallow: /crawler/
 
 # 百度 / Google 共用同一 sitemap（单文件，Baidu 合规命名）
-Sitemap: https://zelda-guide.example.com/sitemap-0.xml
+Sitemap: https://zelda-guide.com/sitemap-0.xml
 
 # 百度站长平台主动推送接口（上线后在站长平台获取 token）
 # 见 README「SEO 提交」一节

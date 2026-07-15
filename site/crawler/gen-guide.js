@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 /**
- * 批量生成攻略页 + 重新生成 sitemap-0.xml（零依赖）
+ * 批量生成攻略页 + 重新生成 sitemap-0.xml（零依赖，双语版）
  * 用法：node crawler/gen-guide.js
- * 说明：生成内容使用占位域名 zelda-guide.example.com；上线前用 set-domain.js 替换。
+ * 说明：同时产出中文（/{game}/guides/）与英文（/en/{game}/guides/）两套页面，
+ *       自动互链 hreflang(zh-CN/en)、调整资源相对路径、并把英文 URL 写入 sitemap。
+ *       域名来自下方 BASE（上线前用 set-domain.js 一键替换）。
  */
 const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const BASE = 'https://zelda-guide.example.com';
+const BASE = 'https://zelda-guide.com';
 const DATE = '2026-07-15';
 
-// 现有 4 篇（仅进 sitemap，不重写 HTML）
+// 现有 4 篇（仅进 sitemap 与中文生成，英文版为 v1.1 后续补充）
 const EXISTING = [
   { game: 'totk', slug: 'shrine-rauru', pc: 0.8 },
   { game: 'totk', slug: 'durability-fusion', pc: 0.8 },
@@ -442,39 +444,466 @@ const GUIDES = [
   }
 ];
 
-function navFor(game) {
-  const isTotk = game === 'totk';
+/* ============ 英文版内容（与中文 slug 一一对应，结构对齐） ============ */
+const EN = {
+  'sky-island-guide': {
+    title: 'Sky Island & Sky Exploration · TOTK', h1: 'Great Sky Island & Sky Exploration Route',
+    eyebrow: 'TOTK · Walkthrough',
+    desc: 'Original TOTK guide to the Great Sky Island: takeoff order, Ascend & Ultrahand in practice, and sky resource spots to leave the island steadily.',
+    lead: 'The Great Sky Island is TOTK\'s starting area; its puzzles teach you the two core abilities—Ascend and Ultrahand. Follow the recommended order to clear it and depart safely.',
+    bodyHtml: `
+        <h2 id="where">1. Prep Before Takeoff</h2>
+        <p>After arriving on the Great Sky Island, learn the controls: left stick to move, R for Ascend, hold L to open the Ultrahand menu. Practice both once in the tutorial corridor.</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-heart.svg" alt="heart" /></div><div><strong>Hearty Fruit ×3</strong>: trees on the island; grab some.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-sword.svg" alt="sword" /></div><div><strong>Training Stick ×1</strong>: found at the island edge; use it to practice Ultrahand.</div></div>
+
+        <h2 id="how">2. Recommended Progression</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Enter the Ultrahand tutorial</h4><p>Follow the prompt to fuse a stick onto a shield with Ultrahand and understand the combination logic.</p></div></div>
+          <div class="step"><div><h4>Unlock Ascend</h4><p>Interact with the designated altar to gain the ability; afterward you can rise through any ceiling surface.</p></div></div>
+          <div class="step"><div><h4>Collect sky materials</h4><p>Gather Zonai charges and battery parts along the floating slabs to seed your vehicles later.</p></div></div>
+          <div class="step"><div><h4>Trigger departure</h4><p>After the main story node, glide off the island\'s edge from the launch point into Hyrule.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. First Thing After Landing</h2>
+        <p>Prioritize unlocking the nearest Skyview Tower to reveal the map. Save the sky charges for vehicles; don\'t spend them yet.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>If you drift off course, open the map after landing and fast-travel to the nearest tower instead of trekking.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'Ascend won\'t activate?', a: 'Make sure you unlocked it at the altar; the target ceiling must be "attachable"—pure water or special materials won\'t work.' },
+      { q: 'Must I grab everything before leaving?', a: 'No, but grab at least one Zonai charge; you\'ll need it for vehicles.' },
+      { q: 'Stuck in the tutorial corridor?', a: 'Most stalls come from a badly fused part—reopen the Ultrahand menu and confirm the part snapped before confirming.' }
+    ],
+    next: { href: 'vehicle-build-basics.html', text: 'Zonai Vehicle Building 101' }
+  },
+  'vehicle-build-basics': {
+    title: 'Zonai Vehicle Building 101 · TOTK', h1: 'Zonai Device Vehicle Building 101',
+    eyebrow: 'TOTK · Mechanics',
+    desc: 'Original TOTK Ultrahand vehicle tutorial: wheel + steering stick combos, center-of-gravity tips, common rollover causes, and power-saving tricks.',
+    lead: 'Vehicles are TOTK\'s signature play. Master the "wheel + steering stick + battery" triangle and you can build ground cars, boats, even flyers.',
+    bodyHtml: `
+        <h2 id="where">1. The Core Trio</h2>
+        <p>Every vehicle rests on three parts: the Zonai battery that powers it, the steering stick that controls direction, and the wheels/fans/springs that move it.</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-sword.svg" alt="sword" /></div><div><strong>Steering Stick ×1</strong>: controls direction; required.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-bow.svg" alt="bow" /></div><div><strong>Zonai Battery ×1</strong>: supplies power and decides range.</div></div>
+
+        <h2 id="how">2. Build a Ground Car (step by step)</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Place a chassis</h4><p>Pick a flat slab as the body; long enough for two wheels.</p></div></div>
+          <div class="step"><div><h4>Mount wheels</h4><p>Attach one wheel front and one back, symmetric or it veers.</p></div></div>
+          <div class="step"><div><h4>Add steering stick</h4><p>Snap it to the body center; the system will prompt to bind controls.</p></div></div>
+          <div class="step"><div><h4>Power and test</h4><p>Install the battery and drive; if it spins in place, the wheel is likely reversed.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. Stability & Power Saving</h2>
+        <p>Lower center of gravity is steadier: put the battery and steering stick below the body. For long trips, use "fan + spring" instead of wheels to save power.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>Most rollovers come from high center of gravity or asymmetric wheels. Test on flat ground before climbing hills.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'Vehicle won\'t move?', a: 'Check the battery is installed and charged, and the steering stick bound (a prompt confirms it).' },
+      { q: 'How do I build a flyer?', a: 'Use springs + fan upward with battery power; control ascent and forward motion for brief flight.' },
+      { q: 'Battery dead?', a: 'Zonai ore scatters the map; knock it off with Ultrahand and reattach, or refill at a shrine.' }
+    ],
+    next: { href: 'best-weapons-totk.html', text: 'Best TOTK Weapons' }
+  },
+  'totk-korok-1000': {
+    title: '1000 Korok Seeds Overview · TOTK', h1: '1000 Korok Seeds Overview & Tools',
+    eyebrow: 'TOTK · Collectibles',
+    desc: 'Original TOTK guide to all 1000 Korok Seeds: type distribution, must-have items, map-marking method, and an efficient route to stop missing any.',
+    lead: 'TOTK has 1000 Korok Seeds—the most in the series. Breaking collection down by "type" beats blind searching.',
+    bodyHtml: `
+        <h2 id="where">1. Two Things First</h2>
+        <p>Most Koroks rely on pattern puzzles. Bringing these two speeds you up a lot:</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-seed.svg" alt="seed" /></div><div><strong>Seeds ×20</strong>: for statues/piles.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-bow.svg" alt="bow" /></div><div><strong>Bow ×1</strong>: trigger devices from range.</div></div>
+
+        <h2 id="how">2. Common Types & Solutions</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Piles / statues</h4><p>Drop the matching item (seed, fruit, weapon) into the gap.</p></div></div>
+          <div class="step"><div><h4>Ring challenges</h4><p>Glide or run along the glowing line; don\'t break it.</p></div></div>
+          <div class="step"><div><h4>Slab puzzles</h4><p>Push scattered slabs back into alignment.</p></div></div>
+          <div class="step"><div><h4>Time trials</h4><p>Reach the goal within the limit; use a horse or vehicle.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. Efficient Route</h2>
+        <p>Clear one region fully before moving on, and mark the map (✓) to avoid repeats. The sky and depths each hold a batch—don\'t只看 the surface.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>The Korok Mask (unlock first) makes nearby Koroks sound off—a lifesaver for late cleanup.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'Must I collect all 1000?', a: 'No—you can finish the game without; full collection is for rewards and achievements.' },
+      { q: 'Missed some?', a: 'Get the Korok Mask later and hunt by sound, or sweep region by region by type.' },
+      { q: 'Are there in the depths?', a: 'Yes—the depths and sky each hold a portion; don\'t miss them.' }
+    ],
+    next: { href: 'shrine-all-152.html', text: 'All 152 TOTK Shrines' }
+  },
+  'best-weapons-totk': {
+    title: 'Best TOTK Weapons & Where to Get · TOTK', h1: 'Best TOTK Weapons & How to Obtain',
+    eyebrow: 'TOTK · Gear',
+    desc: 'Original TOTK weapon guide: high-attack base materials, Ultrahand fusion ideas, and durability tips to beat bosses more easily.',
+    lead: 'TOTK weapons derive strength from "base + attachment". Knowing how to fuse beats hunting for a single godly weapon.',
+    bodyHtml: `
+        <h2 id="where">1. Pick Base by Attack</h2>
+        <p>Prioritize high-attack melee bases; pick a bow for ranged. Note the base has its own durability; attachments add damage, not durability.</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-sword.svg" alt="sword" /></div><div><strong>High-attack melee base</strong>: e.g. Guardian series.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-bow.svg" alt="bow" /></div><div><strong>Ranged bow</strong>: for flying/high targets.</div></div>
+
+        <h2 id="how">2. Ultrahand Fusion Ideas</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Choose base</h4><p>Use a high-attack melee weapon as the core.</p></div></div>
+          <div class="step"><div><h4>Attach part</h4><p>Rock/metal adds damage; horns add element.</p></div></div>
+          <div class="step"><div><h4>Test combos</h4><p>Swap attachments on the same base, compare damage, lock the best.</p></div></div>
+          <div class="step"><div><h4>Keep spares</h4><p>Good bases are scarce; stock a few backups.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. Preserving Durability</h2>
+        <p>Let companions or vehicles draw fire before fighting; save prized weapons for bosses, use common ones on mobs.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>When a fused attachment breaks the weapon remains, so "good base + disposable attachment" is the best value.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'Where is the best base?', a: 'Late-game labs and elite drops of high-attack Guardian series are safest; use common high-attack early.' },
+      { q: 'Do attachments affect durability?', a: 'No—attachments only change damage/element; durability comes from the base.' },
+      { q: 'Can a broken weapon be repaired?', a: 'Not repaired, but re-fuse a new attachment to extend its life once.' }
+    ],
+    next: { href: 'sage-companions.html', text: 'Four Sage Companions' }
+  },
+  'shrine-all-152': {
+    title: 'All 152 TOTK Shrines · TOTK', h1: 'All 152 TOTK Shrines Cheat Sheet',
+    eyebrow: 'TOTK · Shrines',
+    desc: 'Original TOTK guide to all 152 shrines: categorized by terrain (surface/sky/depth) and type (combat/puzzle/blessing), with priorities.',
+    lead: 'TOTK has 152 shrines across the surface, sky, and depths. Clear by layer for the smoothest route.',
+    bodyHtml: `
+        <h2 id="where">1. Three-Layer Distribution</h2>
+        <p>About 120 on the surface, ~16 each in the sky and depths. Clear the surface first, then go up and down.</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-shrine.svg" alt="shrine" /></div><div><strong>Surface shrines</strong>: clear along the main path.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-shrine.svg" alt="shrine" /></div><div><strong>Sky/depth shrines</strong>: need corresponding abilities unlocked.</div></div>
+
+        <h2 id="how">2. Progress by Type</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Combat</h4><p>Fixed enemies; good to practice.</p></div></div>
+          <div class="step"><div><h4>Puzzle</h4><p>Use Ascend/Ultrahand; switch approach if stuck.</p></div></div>
+          <div class="step"><div><h4>Blessing</h4><p>No combat; walk in for the reward—do these for tolerance.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. Priority Advice</h2>
+        <p>Before the boss, finish blessing shrines for heart/stamina buffer. Save puzzles for when all abilities are unlocked.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>After lighting a region via a Skyview Tower, unsolved shrines show as "?" on the map—hunt by the map.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'Must I do all?', a: 'Only some for the story; all for full health/stamina and achievements.' },
+      { q: 'Not showing on map?', a: 'Climb the matching Skyview Tower; sky/depth need layer switch.' },
+      { q: 'Puzzle stuck?', a: 'Most break with Ascend or Ultrahand; change the viewing angle for the ceiling.' }
+    ],
+    next: { href: 'totk-korok-1000.html', text: '1000 Korok Seeds Overview' }
+  },
+  'sage-companions': {
+    title: 'Four Sage Companions · TOTK', h1: 'TOTK Four Sage Companions & Usage',
+    eyebrow: 'TOTK · Companions',
+    desc: 'Original TOTK guide to the four sages: where each is, unlock conditions, combat role, and when to summon—team up to beat bosses steadily.',
+    lead: 'The four sages are your steadiest allies. Unlock them one by one and summon in battle to share the heat.',
+    bodyHtml: `
+        <h2 id="where">1. Sage Overview</h2>
+        <p>They correspond to fire/lightning/wind/water attendants, each with a unique skill and location, unlocked along the main story.</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-sword.svg" alt="sword" /></div><div><strong>Combat sage</strong>: tanks damage up front.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-bow.svg" alt="bow" /></div><div><strong>Ranged sage</strong>: output / crowd control.</div></div>
+
+        <h2 id="how">2. Unlock Pace</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Advance the story</h4><p>Reach the region, trigger the sage cutscene.</p></div></div>
+          <div class="step"><div><h4>Finish the trial</h4><p>Mostly puzzle + small fight; gain the summon ability.</p></div></div>
+          <div class="step"><div><h4>Bind to wheel</h4><p>Bind on the wheel; call anytime in battle.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. Best Usage</h2>
+        <p>In boss fights, summon the tank first to draw aggro while you flank. Save ranged for mobs.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>A fallen sage temporarily leaves and cools down; don\'t dump all at once.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'How many at once?', a: 'One can be summoned in battle; switch via the wheel.' },
+      { q: 'Sage died?', a: 'It temporarily leaves and cools down; re-summon shortly after.' },
+      { q: 'Must I do the main story?', a: 'Yes—the four sages unlock at main-story nodes.' }
+    ],
+    next: { href: 'sky-island-guide.html', text: 'Great Sky Island & Sky Exploration' }
+  },
+  'shrine-all-120': {
+    title: 'All 120 BOTW Shrines · BOTW', h1: 'All 120 BOTW Shrines Cheat Sheet',
+    eyebrow: 'BOTW · Shrines',
+    desc: 'Original BOTW guide to all 120 shrines: categorized by type (combat/puzzle/trial), distribution patterns, and which to prioritize for stamina/heart.',
+    lead: 'BOTW has 120 shrines, many hidden behind shrine quests. Sweeping by type is fastest.',
+    bodyHtml: `
+        <h2 id="where">1. Type Distribution</h2>
+        <p>Combat and puzzle each about half, plus a few "blessing/trial" that only appear after an external task.</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-shrine.svg" alt="shrine" /></div><div><strong>Combat shrines</strong>: fixed enemies; practice.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-shrine.svg" alt="shrine" /></div><div><strong>Puzzle shrines</strong>: use magnesis/cryonis/stasis.</div></div>
+
+        <h2 id="how">2. Progress by Ability</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Get the four abilities</h4><p>Once you have the Sheikah Slate abilities, most puzzle shrines break.</p></div></div>
+          <div class="step"><div><h4>Clear combat along the way</h4><p>Combat shrines on the main path; no detour.</p></div></div>
+          <div class="step"><div><h4>Solve hidden shrines</h4><p>Do the matching "shrine quest" first to reveal them.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. Stamina or Heart?</h2>
+        <p>Want to climb towers/glide? Prioritize stamina. Want to bash the boss? Prioritize heart. Suggest a full stamina round first, then heart.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>From a tall tower summit, unsolved shrines show as "?"—sweep by plan, miss none.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'Must I do all 120?', a: 'No for the story; all for full stats and achievements.' },
+      { q: 'Won\'t reveal?', a: 'Most are shrine quests—pick them up in nearby villages.' },
+      { q: 'Which trick for puzzles?', a: 'Magnesis/cryonis/stasis cover the vast majority.' }
+    ],
+    next: { href: 'divine-beast-guide.html', text: 'Divine Beast Order' }
+  },
+  'divine-beast-guide': {
+    title: 'Divine Beast Order · BOTW', h1: 'BOTW Divine Beast Order & Tips',
+    eyebrow: 'BOTW · Walkthrough',
+    desc: 'Original BOTW Divine Beast guide: recommended challenge order, each mechanic (fire/water/lightning/wind), and post-clear buffs to beat the final boss steadily.',
+    lead: 'The four Divine Beasts are core prep before the final fight. Right order drops the difficulty sharply.',
+    bodyHtml: `
+        <h2 id="where">1. Recommended Order</h2>
+        <p>Generally: Water → Lightning → Wind → Fire. Water/Lightning are simple to learn; Fire is hardest, save for last.</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-sword.svg" alt="sword" /></div><div><strong>Fire beast</strong>: most complex mechanic; save.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-bow.svg" alt="bow" /></div><div><strong>Water beast</strong>: best starter.</div></div>
+
+        <h2 id="how">2. Each Beast\'s Points</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Water</h4><p>Freeze water flow to open paths; puzzle-friendly.</p></div></div>
+          <div class="step"><div><h4>Lightning</h4><p>Avoid lightning, use non-metal weapons; high-ground mechanic.</p></div></div>
+          <div class="step"><div><h4>Wind</h4><p>Use updrafts and gliding; fast pace.</p></div></div>
+          <div class="step"><div><h4>Fire</h4><p>Heat zone needs fire/resist prep; most winding mechanisms.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. Post-Clear Buffs</h2>
+        <p>Each beast cleared grants one sage assist in the final fight. All four cleared gives the biggest payoff.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>Save at the nearby point and prep gear before entering; bring fire-resist elixirs for the Fire beast.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'Does order matter?', a: 'It shapes the difficulty curve; Water → Lightning → Wind → Fire is smoothest.' },
+      { q: 'Can\'t beat it?', a: 'Go do shrines for heart/stamina, or grind gear first.' },
+      { q: 'Must I clear all four?', a: 'No, but all four makes the final fight easiest.' }
+    ],
+    next: { href: 'korok-map-regions.html', text: 'Koroks by Region' }
+  },
+  'korok-map-regions': {
+    title: 'Koroks by Region · BOTW', h1: 'BOTW Korok Seeds by Region',
+    eyebrow: 'BOTW · Collectibles',
+    desc: 'Original BOTW guide to all 900 Korok Seeds: distribution by major region (plains/mountains/desert), common puzzles, and marking method for efficient cleanup.',
+    lead: 'BOTW has 900 Korok Seeds. Sweeping by major region beats random searching.',
+    bodyHtml: `
+        <h2 id="where">1. Get the Korok Mask First</h2>
+        <p>After the matching shrine quest, the mask makes nearby Koroks sound off—key for late cleanup.</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-seed.svg" alt="seed" /></div><div><strong>Seeds ×20</strong>: for holes/piles.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-bow.svg" alt="bow" /></div><div><strong>Bow</strong>: trigger from range.</div></div>
+
+        <h2 id="how">2. Sweep by Region</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Central Plains</h4><p>High density; clear first for fastest payback.</p></div></div>
+          <div class="step"><div><h4>Mountains/Forest</h4><p>Many rings and slabs; use gliding/magnesis.</p></div></div>
+          <div class="step"><div><h4>Desert/Volcano</h4><p>Watch environmental damage; prep the right elixir.</p></div></div>
+          <div class="step"><div><h4>Coast/Snowfield</h4><p>Rare but high reward; leave for later.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. Mark to Avoid Repeats</h2>
+        <p>Check (✓) every collected point on the map; zero each region. With the mask\'s sound, few slip through.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>Batch by puzzle type: collect all "seed-drop" first, then "rings"—smoother rhythm.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'Must I get 900?', a: 'No; mostly for achievements and inventory expansion.' },
+      { q: 'Where is the mask?', a: 'Obtained after a specific shrine quest.' },
+      { q: 'Duplicate collection?', a: 'Avoid with map marks; collected points are recorded.' }
+    ],
+    next: { href: 'best-armor-botw.html', text: 'Best Armor Sets' }
+  },
+  'best-armor-botw': {
+    title: 'Best Armor Sets · BOTW', h1: 'BOTW Best Armor Sets & How to Get',
+    eyebrow: 'BOTW · Gear',
+    desc: 'Original BOTW armor guide: high-defense sets, environmental resist (fire/cold/lightning) sets, and upgrade material sources—mix as needed.',
+    lead: 'Armor decides whether you survive environmental damage and bosses. Match by set, better than mixing.',
+    bodyHtml: `
+        <h2 id="where">1. Prioritize Complete Sets</h2>
+        <p>Two pieces of the same set trigger a set bonus (e.g. slip-resist, stealth)—best value.</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-heart.svg" alt="heart" /></div><div><strong>Flamebreaker set</strong>: essential for volcano.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-sword.svg" alt="sword" /></div><div><strong>High-defense melee set</strong>: boss fights.</div></div>
+
+        <h2 id="how">2. Pick by Environment</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Volcano</h4><p>Flamebreaker set + fire-resist elixir, double safety.</p></div></div>
+          <div class="step"><div><h4>Snowfield</h4><p>Cold-resist set or warm meals.</p></div></div>
+          <div class="step"><div><h4>Lightning zone</h4><p>Non-metal gear avoids attracting lightning.</p></div></div>
+          <div class="step"><div><h4>Boss</h4><p>High-defense set + full heart, trade blows.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. Upgrade Materials</h2>
+        <p>Sets can be upgraded by an NPC; materials mostly come from elite enemies and Korok rewards—stock up casually.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>The stealth set is great for sneak-hunting; build it first if you ambush.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'Which set first?', a: 'Depends on where you go; volcano/snowfield prioritize the matching resist set.' },
+      { q: 'How to trigger set bonus?', a: 'Wear enough pieces of the same set; auto-activates.' },
+      { q: 'Not enough materials?', a: 'From elite enemies and Koroks; accumulate as you play.' }
+    ],
+    next: { href: 'recipe-cooking.html', text: 'Buff Recipe Guide' }
+  },
+  'recipe-cooking': {
+    title: 'Buff Recipe Guide · BOTW', h1: 'BOTW Buff Recipes & Effects',
+    eyebrow: 'BOTW · Mechanics',
+    desc: 'Original BOTW cooking tutorial: attack/defense/fire-resist/cold-resist/glide buff ideas, key ingredients, and stacking rules—save money and effort.',
+    lead: 'Cooking is a low-cost power-up. Knowing "buff stacking rules" beats hoarding god gear.',
+    bodyHtml: `
+        <h2 id="where">1. Buff Rules</h2>
+        <p>Same effect takes the highest value, not summed; different effects can coexist. Ingredient star level sets duration/strength.</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-heart.svg" alt="heart" /></div><div><strong>Hearty ingredients</strong>: heal / yellow hearts.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-seed.svg" alt="seed" /></div><div><strong>Element materials</strong>: monster horns/chilis etc.</div></div>
+
+        <h2 id="how">2. Common Recipe Ideas</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Attack buff</h4><p>High-protein meat + attack monster part.</p></div></div>
+          <div class="step"><div><h4>Defense buff</h4><p>Hard-shell cricket + defense material.</p></div></div>
+          <div class="step"><div><h4>Fire/cold resist</h4><p>Chili / warm-drake classes each shine.</p></div></div>
+          <div class="step"><div><h4>Glide/stealth</h4><p>Trigger with the matching monster part.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. Money-Saving Tips</h2>
+        <p>Batch-gather base ingredients, cook only when needed. Use "single attribute + staple" combos to control cost.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>Clashing attributes yield "failed food" that only heals 1 heart—confirm ingredients before cooking.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'Do buffs stack?', a: 'Same effect takes the highest, not summed; different effects coexist.' },
+      { q: 'How to extend duration?', a: 'Use high-star ingredients or stack same attribute for longer/stronger.' },
+      { q: 'Failed food?', a: 'Attribute conflict fails; only heals a little.' }
+    ],
+    next: { href: 'speedrun-basics.html', text: 'Speedrun Basics' }
+  },
+  'speedrun-basics': {
+    title: 'Speedrun Basics · BOTW', h1: 'BOTW Speedrun Basics & Efficient Route',
+    eyebrow: 'BOTW · Tips',
+    desc: 'Original BOTW speedrun intro: required ability order, skip the redundant, key warp points, and resource management—save hours even as a normal player.',
+    lead: 'Speedrunning isn\'t only for pros. Master "abilities first + skip the redundant" and even a normal clear gets much faster.',
+    bodyHtml: `
+        <h2 id="where">1. Abilities First</h2>
+        <p>Grab stasis/cryonis/magnesis early; most puzzles and shortcuts rely on them, faster than blind map-pushing.</p>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-bow.svg" alt="bow" /></div><div><strong>Stasis</strong>: control / break mechanisms.</div></div>
+        <div class="item-row"><div class="item-ic"><img src="../../../assets/img/item-sword.svg" alt="sword" /></div><div><strong>Cryonis</strong>: bridge / step stool.</div></div>
+
+        <h2 id="how">2. Efficient Progress</h2>
+        <div class="steps">
+          <div class="step"><div><h4>Head to tall towers</h4><p>Reveal the map; fewer wrong turns.</p></div></div>
+          <div class="step"><div><h4>Clear shrines en route</h4><p>Do them at main-story nodes; no backtrack.</p></div></div>
+          <div class="step"><div><h4>Chain warps</h4><p>Use warp points to link quests; less running.</p></div></div>
+          <div class="step"><div><h4>Prep before boss</h4><p>Only refill needed heart/stamina; speedrun the rest.</p></div></div>
+        </div>
+
+        <h2 id="tips">3. Resource Management</h2>
+        <p>Weapons are use-and-discard; save prized ones for bosses. Cook as needed, don\'t stockpile.</p>
+        <div class="callout">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><h4>Tip</h4><p>Many walls can be stepped over with a cryonis block—saves the detour.</p></div>
+        </div>`,
+    faqs: [
+      { q: 'Can a beginner speedrun?', a: 'Yes—focus on ability order and less running, not extreme inputs.' },
+      { q: 'Which ability first?', a: 'Stasis + cryonis are most versatile; prioritize.' },
+      { q: 'Will I miss content?', a: 'You\'ll miss collectibles, but the main story is faster; collect in a second run.' }
+    ],
+    next: { href: 'shrine-all-120.html', text: 'All 120 Shrines' }
+  }
+};
+
+/* ============ 文案字典 ============ */
+const UI = {
+  zh: {
+    siteName: '塞尔达攻略站', home: '首页', popular: '热门攻略', about: '关于',
+    toc: '本篇目录', faqTitle: '常见问题', next: '下一篇',
+    footerDesc: '覆盖 TOTK 与 BOTW 的图文攻略聚合站。',
+    gameH: '游戏', noteH: '说明',
+    copyright: '© 2026 塞尔达攻略站 · 攻略内容为原创整理，游戏名称/元素版权归 Nintendo 所有',
+    aboutLink: '内容来源与版权', updateLink: '自动更新机制'
+  },
+  en: {
+    siteName: 'Zelda Guide', home: 'Home', popular: 'Popular Guides', about: 'About',
+    toc: 'On this page', faqTitle: 'FAQ', next: 'Next:',
+    footerDesc: 'Illustration-rich guides for TOTK & BOTW.',
+    gameH: 'Games', noteH: 'Notes',
+    copyright: '© 2026 Zelda Guide · Original guides; game names & elements © Nintendo',
+    aboutLink: 'Sources & Copyright', updateLink: 'Auto-update'
+  }
+};
+const GAME_LABEL = {
+  totk: { zh: ['王国之泪', '王国之泪 TOTK'], en: ['Tears of the Kingdom', 'TOTK'] },
+  botw: { zh: ['旷野之息', '旷野之息 BOTW'], en: ['Breath of the Wild', 'BOTW'] }
+};
+
+function zhUrl(g) { return `${BASE}/${g.game}/guides/${g.slug}.html`; }
+function enUrl(g) { return `${BASE}/en/${g.game}/guides/${g.slug}.html`; }
+
+function navFor(game, lang) {
+  const other = game === 'totk' ? 'botw' : 'totk';
+  const hub = lang === 'en' ? '../../index.html' : '../index.html';
+  const otherHub = lang === 'en' ? `../../../${other}/index.html` : `../../${other}/index.html`;
   return {
-    activeName: isTotk ? '王国之泪' : '旷野之息',
-    activeFull: isTotk ? '王国之泪 TOTK' : '旷野之息 BOTW',
-    otherName: isTotk ? '旷野之息' : '王国之泪',
-    otherFull: isTotk ? '旷野之息 BOTW' : '王国之泪 TOTK',
-    otherHref: isTotk ? '../../botw/index.html' : '../../totk/index.html'
+    activeName: GAME_LABEL[game][lang][0],
+    activeFull: GAME_LABEL[game][lang][1],
+    otherName: GAME_LABEL[other][lang][0],
+    otherFull: GAME_LABEL[other][lang][1],
+    hubHref: hub,
+    otherHref: otherHub
   };
 }
 
-function renderHead(g, url) {
+function pick(g, lang) {
+  if (lang === 'zh') return g;
+  const e = EN[g.slug];
+  return Object.assign({}, g, {
+    title: e.title, h1: e.h1, eyebrow: e.eyebrow, desc: e.desc, lead: e.lead,
+    bodyHtml: e.bodyHtml, faqs: e.faqs, next: e.next
+  });
+}
+
+function renderHead(f, url, lang, g) {
   const faqJson = JSON.stringify({
     '@context': 'https://schema.org', '@type': 'FAQPage',
-    mainEntity: g.faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }))
+    mainEntity: f.faqs.map(x => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } }))
   });
-  const enUrl = url.replace('/totk/', '/en/totk/').replace('/botw/', '/en/botw/');
+  const z = zhUrl(g), e = enUrl(g);
+  const altZh = lang === 'zh' ? url : z;
+  const altEn = lang === 'en' ? url : e;
+  const code = lang === 'en' ? 'en' : 'zh-CN';
   return `<!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="${code}" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${g.title} | 塞尔达攻略站</title>
-  <meta name="description" content="${g.desc}" />
+  <title>${f.title} | ${UI[lang].siteName}</title>
+  <meta name="description" content="${f.desc}" />
   <link rel="canonical" href="${url}" />
-  <link rel="alternate" hreflang="zh-CN" href="${url}" />
-  <link rel="alternate" hreflang="en" href="${enUrl}" />
-  <meta property="og:title" content="${g.h1}" />
-  <meta property="og:description" content="${g.desc}" />
-  <link rel="stylesheet" href="../../assets/css/main.css" />
+  <link rel="alternate" hreflang="zh-CN" href="${altZh}" />
+  <link rel="alternate" hreflang="en" href="${altEn}" />
+  <meta property="og:title" content="${f.h1}" />
+  <meta property="og:description" content="${f.desc}" />
+  <link rel="stylesheet" href="${lang === 'en' ? '../../../assets/css/main.css' : '../../assets/css/main.css'}" />
   <script>(function(){var t='light';try{t=localStorage.getItem('theme')||'light';}catch(e){}document.documentElement.setAttribute('data-theme',t);})();</script>
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"Article","headline":${JSON.stringify(g.h1)},"author":{"@type":"Organization","name":"塞尔达攻略站"},"publisher":{"@type":"Organization","name":"塞尔达攻略站"},"datePublished":"${DATE}","dateModified":"${DATE}"}
+  {"@context":"https://schema.org","@type":"Article","headline":${JSON.stringify(f.h1)},"author":{"@type":"Organization","name":"${UI[lang].siteName}"},"publisher":{"@type":"Organization","name":"${UI[lang].siteName}"},"datePublished":"${DATE}","dateModified":"${DATE}"}
   </script>
   <script type="application/ld+json">
   ${faqJson}
@@ -482,28 +911,30 @@ function renderHead(g, url) {
 </head>`;
 }
 
-function renderBody(g, nav) {
+function renderBody(f, nav, lang, g) {
+  const rel = lang === 'en' ? '../../../' : '../../';
+  const altUrl = lang === 'en' ? zhUrl(g) : enUrl(g);
   const tocLinks = TOC.map(t => `          <a href="#${t.id}">${t.text}</a>`).join('\n');
-  const faqDetails = g.faqs.map((f, i) =>
-    `          <details${i === 0 ? ' open' : ''}><summary>${f.q}<span class="plus">+</span></summary><div class="ans">${f.a}</div></details>`
+  const faqDetails = f.faqs.map((x, i) =>
+    `          <details${i === 0 ? ' open' : ''}><summary>${x.q}<span class="plus">+</span></summary><div class="ans">${x.a}</div></details>`
   ).join('\n');
   return `<body>
   <header class="site-header">
     <nav class="nav">
-      <a class="brand" href="../../index.html"><img src="../../assets/img/logo.svg" alt="logo" />塞尔达攻略站</a>
+      <a class="brand" href="${rel}index.html"><img src="${rel}assets/img/logo.svg" alt="logo" />${UI[lang].siteName}</a>
       <button class="icon-btn" data-menu-toggle aria-label="菜单">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
       <div class="nav-spacer"></div>
       <div class="nav-links">
-        <a href="../index.html" class="active">${nav.activeName}</a>
+        <a href="${nav.hubHref}" class="active">${nav.activeName}</a>
         <a href="${nav.otherHref}">${nav.otherName}</a>
-        <a href="../../index.html#guides">热门攻略</a>
-        <a href="../../index.html#about">关于</a>
+        <a href="${rel}index.html#guides">${UI[lang].popular}</a>
+        <a href="${rel}index.html#about">${UI[lang].about}</a>
       </div>
-      <button class="icon-btn" data-lang-toggle aria-label="语言切换">
+      <a class="icon-btn" data-lang-toggle data-lang-href="${altUrl}" aria-label="语言切换">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
-      </button>
+      </a>
       <button class="icon-btn" data-theme-toggle aria-label="主题切换">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>
       </button>
@@ -511,28 +942,28 @@ function renderBody(g, nav) {
   </header>
 
   <div class="container">
-    <div class="breadcrumb"><a href="../../index.html">首页</a> / <a href="../index.html">${nav.activeName}</a> / <span>${g.h1}</span></div>
+    <div class="breadcrumb"><a href="${rel}index.html">${UI[lang].home}</a> / <a href="${nav.hubHref}">${nav.activeName}</a> / <span>${f.h1}</span></div>
     <div class="doc-layout">
       <main class="doc-main">
-        <div class="cover-banner"><img src="../../assets/img/${g.cover}" alt="${g.h1} 封面（原创）" /></div>
-        <span class="eyebrow">${g.eyebrow}</span>
-        <h1>${g.h1}</h1>
-        <p class="lead">${g.lead}</p>
+        <div class="cover-banner"><img src="${rel}assets/img/${g.cover}" alt="${f.h1} cover (original)" /></div>
+        <span class="eyebrow">${f.eyebrow}</span>
+        <h1>${f.h1}</h1>
+        <p class="lead">${f.lead}</p>
 
         <div class="ad-slot inline" data-label="文中信息流广告" data-size="728×90"><span class="ad-label">广告</span></div>
-${g.bodyHtml}
-        <h2 id="faq">常见问题</h2>
+${f.bodyHtml}
+        <h2 id="faq">${UI[lang].faqTitle}</h2>
         <div class="faq">
 ${faqDetails}
         </div>
 
         <div class="ad-slot inline" data-label="文末信息流广告" data-size="728×90"><span class="ad-label">广告</span></div>
-        <p class="muted" style="font-size:.85rem">下一篇：<a href="${g.next.href}">${g.next.text} →</a></p>
+        <p class="muted" style="font-size:.85rem">${UI[lang].next}<a href="${g.next.href}">${g.next.text} →</a></p>
       </main>
 
       <aside class="doc-side">
         <div class="toc">
-          <h4>本篇目录</h4>
+          <h4>${UI[lang].toc}</h4>
 ${tocLinks}
         </div>
         <div class="ad-slot sidebar" data-label="侧边矩形广告" data-size="300×250" style="margin-top:16px"><span class="ad-label">广告</span></div>
@@ -542,13 +973,13 @@ ${tocLinks}
 
   <footer class="site-footer">
     <div class="container footer-inner">
-      <div><h4>塞尔达攻略站</h4><p class="muted" style="font-size:.9rem;max-width:34ch">覆盖 TOTK 与 BOTW 的图文攻略聚合站。</p></div>
-      <div><h4>游戏</h4><a href="../index.html">${nav.activeFull}</a><a href="${nav.otherHref}">${nav.otherFull}</a></div>
-      <div><h4>说明</h4><a href="../../index.html#about">内容来源与版权</a><a href="../../index.html#about">自动更新机制</a></div>
+      <div><h4>${UI[lang].siteName}</h4><p class="muted" style="font-size:.9rem;max-width:34ch">${UI[lang].footerDesc}</p></div>
+      <div><h4>${UI[lang].gameH}</h4><a href="${nav.hubHref}">${nav.activeFull}</a><a href="${nav.otherHref}">${nav.otherFull}</a></div>
+      <div><h4>${UI[lang].noteH}</h4><a href="${rel}index.html#about">${UI[lang].aboutLink}</a><a href="${rel}index.html#about">${UI[lang].updateLink}</a></div>
     </div>
-    <div class="container footer-bottom">© 2026 塞尔达攻略站 · 攻略内容为原创整理，游戏名称/元素版权归 Nintendo 所有</div>
+    <div class="container footer-bottom">${UI[lang].copyright}</div>
   </footer>
-  <script src="../../assets/js/main.js"></script>
+  <script src="${rel}assets/js/main.js"></script>
 </body>`;
 }
 
@@ -557,14 +988,19 @@ function buildSitemap() {
   urls.push({ loc: '/index.html', pc: 1.0, cf: 'daily' });
   urls.push({ loc: '/totk/index.html', pc: 0.9, cf: 'daily' });
   urls.push({ loc: '/botw/index.html', pc: 0.9, cf: 'daily' });
+  urls.push({ loc: '/en/index.html', pc: 1.0, cf: 'daily' });
+  urls.push({ loc: '/en/totk/index.html', pc: 0.9, cf: 'daily' });
+  urls.push({ loc: '/en/botw/index.html', pc: 0.9, cf: 'daily' });
   for (const e of EXISTING) urls.push({ loc: `/${e.game}/guides/${e.slug}.html`, pc: e.pc, cf: 'weekly' });
-  for (const g of GUIDES) urls.push({ loc: `/${g.game}/guides/${g.slug}.html`, pc: 0.8, cf: 'weekly' });
+  for (const g of GUIDES) {
+    urls.push({ loc: `/${g.game}/guides/${g.slug}.html`, pc: 0.8, cf: 'weekly' });
+    urls.push({ loc: `/en/${g.game}/guides/${g.slug}.html`, pc: 0.8, cf: 'weekly' });
+  }
   const items = urls.map(u =>
     `  <url>\n    <loc>${BASE}${u.loc}</loc>\n    <lastmod>${DATE}</lastmod>\n    <changefreq>${u.cf}</changefreq>\n    <priority>${u.pc}</priority>\n  </url>`
   ).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- 注：/en 英文版为 v1.1 上线内容，待页面建成后补入本 sitemap 并加 hreflang 互链 -->
 ${items}
 </urlset>\n`;
 }
@@ -572,13 +1008,19 @@ ${items}
 // ===== 执行 =====
 let count = 0;
 for (const g of GUIDES) {
-  const nav = navFor(g.game);
-  const url = `${BASE}/${g.game}/guides/${g.slug}.html`;
-  const html = renderHead(g, url) + renderBody(g, nav);
-  const dir = path.join(ROOT, g.game, 'guides');
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, `${g.slug}.html`), html, 'utf8');
-  count++;
+  for (const lang of ['zh', 'en']) {
+    const f = pick(g, lang);
+    const url = lang === 'zh' ? zhUrl(g) : enUrl(g);
+    const html = renderHead(f, url, lang, g) + renderBody(f, navFor(g.game, lang), lang, g);
+    const dir = path.join(ROOT, lang === 'zh' ? g.game : 'en/' + g.game, 'guides');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, `${g.slug}.html`), html, 'utf8');
+    count++;
+  }
 }
 fs.writeFileSync(path.join(ROOT, 'sitemap-0.xml'), buildSitemap(), 'utf8');
-console.log(`✓ 生成 ${count} 篇攻略，已更新 sitemap-0.xml（共 ${3 + EXISTING.length + GUIDES.length} 条 URL）`);
+console.log(`✓ 生成 ${count} 篇攻略（中/英各 ${GUIDES.length}），已更新 sitemap-0.xml（共 ${urls_count()} 条 URL）`);
+
+function urls_count() {
+  return 6 + EXISTING.length + GUIDES.length * 2;
+}

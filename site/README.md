@@ -34,23 +34,32 @@ python -m http.server 8000
 
 ## 2. 部署上线（推荐 GitHub Pages）
 
-### 方案 1（推荐，你已选）：GitHub Pages
+### 方案 1（本站采用）：GitHub Pages + 自定义域名 zelda-guide.com
 > 前置必做：仓库 Settings → Pages → Build and deployment → Source 选「GitHub Actions」
+> 自定义域名已配好 `site/CNAME`（内容为 `zelda-guide.com`），GitHub 会自动启用 HTTPS。
 1. 把**整个仓库**（含 `site/` 与根目录的 `.github/`）推到 GitHub 的 `main` 分支
 2. 首次 push 后，仓库 `Actions` 页的「部署到 GitHub Pages」会自动运行
-3. 跑完即可在 `https://你的用户名.github.io/你的仓库名/` 访问
+3. 跑完即可在 `https://zelda-guide.com/` 访问
 4. 之后每次 push（含自动补抓）都会自动重新部署，无需再操作
 
-### 替换占位域名（上线前必做，一步到位）
-所有页面的 `canonical`/`hreflang`、sitemap、robots 里现在是占位 `zelda-guide.example.com`。
-运行一行命令即可全部替换（把网址换成你真实的 Pages 地址）：
+#### 域名 DNS 设置（在你买域名的注册商后台做）
+把 `zelda-guide.com`（A 记录）指向 GitHub Pages 的四个 IP：
+- `185.199.108.153`
+- `185.199.109.153`
+- `185.199.110.153`
+- `185.199.111.153`
+（可选）`www` 用 CNAME 指向 `你的用户名.github.io`。
+设置后到仓库 Settings → Pages → Custom domain 填 `zelda-guide.com` 并勾选 Enforce HTTPS。
+
+#### 域名替换（已做，留作以后换域名用）
+全站 `canonical`/`hreflang`、sitemap、robots 已是真实域名 `https://zelda-guide.com`（已用 `node crawler/set-domain.js` 一键替换）。
+以后若换域名，在 `site/` 目录跑：
 
 ```bash
-cd site
-node crawler/set-domain.js https://你的用户名.github.io/你的仓库名
+node crawler/set-domain.js https://你的新域名
 ```
 
-脚本会扫描并重写 `index.html` / `totk/index.html` / `botw/index.html` / `sitemap-0.xml` / `robots.txt` 共 5 个文件。
+脚本会**递归扫描** `site/` 下所有文本文件（含攻略页、生成器常量）并替换。
 
 ### 其他平台（备选，非 GitHub Pages）
 - **Netlify 拖拽**：打开 https://app.netlify.com/drop，把 `site/` 拖进去，得 `xxx.netlify.app` 域名。
@@ -123,7 +132,7 @@ node crawler/set-domain.js https://你的用户名.github.io/你的仓库名
    - 站点 `sitemap-0.xml`（已按百度约束命名为 `sitemap-0.xml`，**勿改名 sitemap-index.xml**，否则零收录）
    - 主动推送新链接（平台提供 API token）
 2. Google Search Console（search.google.com/search-console）提交同一 `sitemap-0.xml`
-3. 每页已带 `hreflang`（zh/en 互链）、`canonical`、FAQ/Article 结构化数据，利于富媒体展示。
+3. 中文页与英文页（`/en/`）已双向 `hreflang`（zh-CN/en）互链，`canonical`、FAQ/Article 结构化数据齐全，利于富媒体展示与海外 Google 收录。
 
 ---
 
@@ -131,18 +140,24 @@ node crawler/set-domain.js https://你的用户名.github.io/你的仓库名
 
 ```
 site/
-├─ index.html              # 首页（双游戏入口 + 氛围 Hero）
-├─ totk/index.html        # 王国之泪 中枢
-├─ botw/index.html        # 旷野之息 中枢
-├─ totk/guides/          # TOTK 攻略页（含 2 篇示例）
-├─ botw/guides/          # BOTW 攻略页（含 2 篇示例）
+├─ index.html              # 中文首页（双游戏入口 + 氛围 Hero）
+├─ en/index.html          # 英文首页（海外 Google / AdSense 线）
+├─ totk/index.html        # 王国之泪 中文中枢
+├─ en/totk/index.html      # 王国之泪 英文中枢
+├─ botw/index.html        # 旷野之息 中文中枢
+├─ en/botw/index.html      # 旷野之息 英文中枢
+├─ totk/guides/          # TOTK 中文攻略（12 生成 + 2 示例）
+├─ en/totk/guides/       # TOTK 英文攻略（与中文一一对应）
+├─ botw/guides/          # BOTW 中文攻略（12 生成 + 2 示例）
+├─ en/botw/guides/       # BOTW 英文攻略（与中文一一对应）
 ├─ assets/
 │  ├─ css/main.css        # 设计系统（Hylian 绿 + 黄铜，双主题，广告位组件）
-│  ├─ js/main.js          # 主题切换/语言记忆/广告注入/TOC
+│  ├─ js/main.js          # 主题/语言切换/广告注入/TOC
 │  └─ img/               # 原创 SVG（地图/图标/封面）+ AI 氛围图
-├─ sitemap-0.xml         # 百度/Google 收录（Baidu 合规命名）
+├─ CNAME                 # GitHub Pages 自定义域名（zelda-guide.com）
+├─ sitemap-0.xml         # 百度/Google 收录（Baidu 合规命名，含中英文 URL）
 ├─ robots.txt             # 爬虫规则
-└─ crawler/crawl.js       # 自动补抓脚本（零依赖）
+└─ crawler/              # gen-guide.js（生成攻略+sitemap）/ crawl.js（自动补抓）/ set-domain.js（域名替换）
 ```
 > 注：`.github/workflows/`（部署 + 自动更新）在**仓库根目录**，不在 `site/` 内。
 
