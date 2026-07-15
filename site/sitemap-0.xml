@@ -5,7 +5,7 @@
     <loc>https://zelda-guide.example.com/index.html</loc>
     <lastmod>2026-07-15</lastmod>
     <changefreq>daily</changefreq>
-    <priority>1.0</priority>
+    <priority>1</priority>
   </url>
   <url>
     <loc>https://zelda-guide.example.com/totk/index.html</loc>
@@ -39,6 +39,78 @@
   </url>
   <url>
     <loc>https://zelda-guide.example.com/botw/guides/shrine-keeta.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/totk/guides/sky-island-guide.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/totk/guides/vehicle-build-basics.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/totk/guides/totk-korok-1000.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/totk/guides/best-weapons-totk.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/totk/guides/shrine-all-152.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/totk/guides/sage-companions.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/botw/guides/shrine-all-120.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/botw/guides/divine-beast-guide.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/botw/guides/korok-map-regions.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/botw/guides/best-armor-botw.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/botw/guides/recipe-cooking.html</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zelda-guide.example.com/botw/guides/speedrun-basics.html</loc>
     <lastmod>2026-07-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
